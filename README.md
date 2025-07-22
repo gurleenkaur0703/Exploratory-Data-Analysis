@@ -1,9 +1,34 @@
-## Conducted exploratory Christmas sales data analysis using Python libraries such as Numpy, Pandas, Matplotlib, and Seaborn
+# 🎄 Christmas Sales EDA Dashboard
+
+An interactive **Exploratory Data Analysis (EDA)** dashboard built using **Streamlit**, enabling users to analyze sales trends, KPIs, and customer behavior from Christmas season sales data.
+
+> 🔍 Upload your own dataset or explore the built-in demo data (`Christmas sales data analysis.csv`) using real-time visualizations.
+
+---
+
+## 🚀 Features
+
+- 📤 Upload your own `.csv` dataset
+- 📊 Key Performance Indicators (KPIs):
+  - Total Revenue
+  - Total Orders
+  - Average Order Value
+- 📦 Sales by Product Category (Bar Chart)
+- 🌍 Sales Distribution by Region (Pie Chart)
+- 🧠 Correlation Heatmap with column selection
+- 📥 Download processed data as CSV
+- 📅 Filter by date range (if Date column is present)
+- Fully responsive layout using **Streamlit**
+
+---
+
+## 📷 Screenshots
+
+### Dashboard 
+![Dashboard](images/dashboard.png)
+
+### KPIs  
+![KPIs](images/kpis.png)
 
 
-![image](https://github.com/user-attachments/assets/858a0d84-e9d6-4a1e-8c1a-e4656fba6ef0)
-##
-![image](https://github.com/user-attachments/assets/ccc12484-c91f-4c91-952e-1c78eeaba0bb)
-##
-![image](https://github.com/user-attachments/assets/42cc19bb-b7d1-49f3-bc9b-9b2cd44b7f18)
 
