@@ -4,46 +4,75 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 import os
+import sqlite3
 
+# --- Page setup ---
 st.set_page_config(page_title="Christmas Sales EDA", layout="wide")
 st.title("🎄 Christmas Sales Data Analysis Dashboard")
-st.markdown("Analyze your Christmas sales data with interactive charts, filters, KPIs, and visualizations. "
-            "Upload your own dataset or use the sample provided.")
+st.markdown("Analyze your Christmas sales data using interactive filters, visualizations, and SQL queries.")
 
-# Upload or load default
+# --- File loading logic ---
 uploaded_file = st.sidebar.file_uploader("📤 Upload your CSV file", type="csv")
+use_db = st.sidebar.checkbox("Use SQLite database if no file uploaded", value=True)
 default_file = "Christmas sales data analysis.csv"
+
+conn = None
+file_used = ""
 
 if uploaded_file:
     df = pd.read_csv(uploaded_file, encoding='latin1')
     file_used = uploaded_file.name
-    st.sidebar.success("✅ Custom file loaded")
+    st.sidebar.success("✅ Custom CSV file loaded")
+
+elif use_db and os.path.exists("sales.db"):
+    try:
+        conn = sqlite3.connect("sales.db")
+        default_query = "SELECT * FROM sales"
+        custom_query = st.sidebar.text_area("Write a custom SQL query (optional)", value=default_query)
+        df = pd.read_sql_query(custom_query, conn)
+        file_used = "sales.db (SQLite)"
+        st.sidebar.success("✅ Loaded from SQLite database")
+
+        # ✅ Show table columns (added block)
+        try:
+            cursor = conn.cursor()
+            cursor.execute("PRAGMA table_info(sales)")
+            columns = [row[1] for row in cursor.fetchall()]
+            st.sidebar.markdown("### 📋 Available Columns")
+            st.sidebar.write(columns)
+        except Exception as e:
+            st.sidebar.error(f"Could not fetch column info: {e}")
+
+    except Exception as e:
+        st.error(f"❌ Failed to read from database: {e}")
+        st.stop()
+
 elif os.path.exists(default_file):
     df = pd.read_csv(default_file, encoding='latin1')
     file_used = default_file
-    st.sidebar.info("✅ Sample dataset loaded")
+    st.sidebar.info("✅ Sample CSV file loaded")
+
 else:
-    st.warning("⚠️ No file uploaded or sample file found.")
+    st.error("⚠️ No data available. Upload a CSV, or ensure `sales.db` or sample file exists.")
     st.stop()
 
-# Show which file is being used
 st.sidebar.write(f"📁 Using file: `{file_used}`")
 
-# Clean column names
+# --- Preprocessing ---
 df.columns = [col.strip() for col in df.columns]
 
-# Preview dataset
+# --- Preview ---
 with st.expander("📄 Preview Dataset"):
-    st.dataframe(df.head())
+    st.dataframe(df.head(10))
 
-# 🔍 Try to auto-detect the revenue column
+# --- Detect revenue/sales column ---
 revenue_col = None
 for col in df.columns:
     if 'revenue' in col.lower() or 'sales' in col.lower():
         revenue_col = col
         break
 
-# KPIs
+# --- KPIs ---
 st.subheader("📊 Key Performance Indicators")
 col1, col2, col3 = st.columns(3)
 
@@ -65,7 +94,7 @@ with col3:
     else:
         st.metric("💳 Avg Order Value", "N/A")
 
-# Sidebar filters
+# --- Filters ---
 st.sidebar.header("🔍 Filters")
 
 if "Date" in df.columns:
@@ -74,7 +103,7 @@ if "Date" in df.columns:
     end_date = st.sidebar.date_input("End Date", df["Date"].max())
     df = df[(df["Date"] >= pd.to_datetime(start_date)) & (df["Date"] <= pd.to_datetime(end_date))]
 
-# 📦 Sales by Category
+# --- Category Analysis ---
 if "Category" in df.columns and revenue_col:
     st.subheader("📦 Sales by Product Category")
     category_sales = df.groupby("Category")[revenue_col].sum().sort_values(ascending=False)
@@ -84,7 +113,7 @@ if "Category" in df.columns and revenue_col:
     ax1.set_title("Revenue by Category")
     st.pyplot(fig1)
 
-# 🌍 Sales by Region
+# --- Region Analysis ---
 if "Region" in df.columns and revenue_col:
     st.subheader("🌍 Sales Distribution by Region")
     region_sales = df.groupby("Region")[revenue_col].sum()
@@ -93,7 +122,7 @@ if "Region" in df.columns and revenue_col:
     ax2.axis("equal")
     st.pyplot(fig2)
 
-# 🧠 Correlation Heatmap
+# --- Correlation Heatmap ---
 numeric_cols = df.select_dtypes(include=np.number)
 
 if not numeric_cols.empty:
@@ -108,7 +137,7 @@ if not numeric_cols.empty:
         sns.heatmap(df[selected_cols].corr(), annot=True, cmap="coolwarm", ax=ax3)
         st.pyplot(fig3)
 
-# 📥 Download filtered/processed data
+# --- Download ---
 st.subheader("📥 Download Processed Data")
 st.download_button(
     label="Download CSV",
@@ -117,5 +146,5 @@ st.download_button(
     mime="text/csv"
 )
 
-# Footer
+# --- Footer ---
 st.caption("Built with ❤️ using Streamlit | By Gurleen Kaur")
