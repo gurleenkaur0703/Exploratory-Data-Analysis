@@ -24,16 +24,25 @@ if uploaded_file:
     file_used = uploaded_file.name
     st.sidebar.success("✅ Custom CSV file loaded")
 
+    # ✅ Create in-memory SQLite DB for querying
+    conn = sqlite3.connect(":memory:")
+    df.to_sql("sales", conn, index=False, if_exists="replace")
+
+    # SQL query input
+    default_query = "SELECT * FROM sales LIMIT 5"
+    custom_query = st.sidebar.text_area("Write a custom SQL query", value=default_query)
+    df = pd.read_sql_query(custom_query, conn)
+
 elif use_db and os.path.exists("sales.db"):
     try:
         conn = sqlite3.connect("sales.db")
         default_query = "SELECT * FROM sales"
-        custom_query = st.sidebar.text_area("Write a custom SQL query (optional)", value=default_query)
+        custom_query = st.sidebar.text_area("Write a custom SQL query", value=default_query)
         df = pd.read_sql_query(custom_query, conn)
         file_used = "sales.db (SQLite)"
         st.sidebar.success("✅ Loaded from SQLite database")
 
-        # ✅ Show table columns (added block)
+        # ✅ Show table columns
         try:
             cursor = conn.cursor()
             cursor.execute("PRAGMA table_info(sales)")
@@ -63,7 +72,7 @@ df.columns = [col.strip() for col in df.columns]
 
 # --- Preview ---
 with st.expander("📄 Preview Dataset"):
-    st.dataframe(df.head(10))
+    st.dataframe(df.head(10))  # Show first 10 records
 
 # --- Detect revenue/sales column ---
 revenue_col = None
@@ -125,17 +134,28 @@ if "Region" in df.columns and revenue_col:
 # --- Correlation Heatmap ---
 numeric_cols = df.select_dtypes(include=np.number)
 
-if not numeric_cols.empty:
+if not numeric_cols.empty and numeric_cols.shape[1] >= 2:
     st.subheader("🧠 Correlation Heatmap")
     selected_cols = st.multiselect(
         "Select numeric columns to include in heatmap:",
         numeric_cols.columns.tolist(),
         default=numeric_cols.columns.tolist()
     )
-    if selected_cols:
-        fig3, ax3 = plt.subplots(figsize=(10, 4))
-        sns.heatmap(df[selected_cols].corr(), annot=True, cmap="coolwarm", ax=ax3)
-        st.pyplot(fig3)
+
+    if selected_cols and len(selected_cols) >= 2:
+        corr_matrix = df[selected_cols].corr()
+        if corr_matrix.isnull().all().all():
+            st.warning("⚠️ Correlation matrix is empty or invalid. Please check your column selection.")
+        else:
+            fig3, ax3 = plt.subplots(figsize=(10, 4))
+            sns.heatmap(corr_matrix, annot=True, cmap="coolwarm", ax=ax3)
+            st.pyplot(fig3)
+    else:
+        st.info("ℹ️ Select at least two numeric columns to generate a heatmap.")
+else:
+    st.info("ℹ️ Not enough numeric data to generate a correlation heatmap.")
+    if uploaded_file:
+        st.info("📌 Tip: For meaningful correlations, upload a CSV with multiple numeric columns like revenue, age, discount, etc.")
 
 # --- Download ---
 st.subheader("📥 Download Processed Data")
