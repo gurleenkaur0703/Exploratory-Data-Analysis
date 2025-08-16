@@ -28,17 +28,11 @@ if uploaded_file:
     conn = sqlite3.connect(":memory:")
     df.to_sql("sales", conn, index=False, if_exists="replace")
 
-    # SQL query input
-    default_query = "SELECT * FROM sales LIMIT 5"
-    custom_query = st.sidebar.text_area("Write a custom SQL query", value=default_query)
-    df = pd.read_sql_query(custom_query, conn)
-
 elif use_db and os.path.exists("sales.db"):
     try:
         conn = sqlite3.connect("sales.db")
         default_query = "SELECT * FROM sales"
-        custom_query = st.sidebar.text_area("Write a custom SQL query", value=default_query)
-        df = pd.read_sql_query(custom_query, conn)
+        df = pd.read_sql_query(default_query, conn)
         file_used = "sales.db (SQLite)"
         st.sidebar.success("✅ Loaded from SQLite database")
 
@@ -61,6 +55,10 @@ elif os.path.exists(default_file):
     file_used = default_file
     st.sidebar.info("✅ Sample CSV file loaded")
 
+    # ✅ Create in-memory SQLite DB
+    conn = sqlite3.connect(":memory:")
+    df.to_sql("sales", conn, index=False, if_exists="replace")
+
 else:
     st.error("⚠️ No data available. Upload a CSV, or ensure `sales.db` or sample file exists.")
     st.stop()
@@ -73,6 +71,22 @@ df.columns = [col.strip() for col in df.columns]
 # --- Preview ---
 with st.expander("📄 Preview Dataset"):
     st.dataframe(df.head(10))  # Show first 10 records
+
+# --- 📑 SQL Query Explorer ---
+if conn is not None:
+    st.subheader("📑 SQL Query Explorer")
+    st.info("📌 You can query the table using: `sales`")
+
+    default_query = "SELECT * FROM sales LIMIT 5"
+    custom_query = st.text_area("📝 Write your SQL query below:", value=default_query)
+
+    if st.button("▶️ Run SQL Query"):
+        try:
+            query_result = pd.read_sql_query(custom_query, conn)
+            st.success("✅ Query executed successfully!")
+            st.dataframe(query_result)
+        except Exception as e:
+            st.error(f"❌ SQL Error: {e}")
 
 # --- Detect revenue/sales column ---
 revenue_col = None
