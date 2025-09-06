@@ -7,15 +7,15 @@ import os
 import sqlite3
 
 # --- Page Configuration ---
-st.set_page_config(page_title="Christmas Sales Dashboard", layout="wide")
-st.title("Christmas Sales Data Analysis")
-st.markdown("Explore and analyze your Christmas sales data with filters, visualizations, and SQL queries.")
+st.set_page_config(page_title="Sales Dashboard", layout="wide")
+st.title("📊 Sales Data Analysis")
+st.markdown("Explore and analyze your sales data with filters, visualizations, and SQL queries.")
 
 # --- Sidebar File Upload ---
-st.sidebar.header("Data Source")
+st.sidebar.header("📁 Data Source")
 uploaded_file = st.sidebar.file_uploader("Upload a CSV file", type="csv")
 use_db = st.sidebar.checkbox("Use local SQLite database if no file uploaded", value=True)
-default_file = "Christmas sales data analysis.csv"
+default_file = "sales data analysis.csv"
 
 conn = None
 file_used = ""
@@ -68,7 +68,7 @@ with st.expander("Preview Data"):
 
 # --- SQL Query Tool ---
 if conn is not None:
-    st.subheader("SQL Query Tool")
+    st.subheader("🧮 SQL Query Tool")
     query_input = st.text_area("Write a SQL query (table name: `sales`)", value="SELECT * FROM sales LIMIT 5")
 
     if st.button("Run Query"):

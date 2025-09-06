@@ -2,7 +2,7 @@ import pandas as pd
 import sqlite3
 
 # Load the CSV
-df = pd.read_csv("Christmas sales data analysis.csv", encoding="latin1")
+df = pd.read_csv("sales data analysis.csv", encoding="latin1")
 
 # Save to SQLite database
 conn = sqlite3.connect("sales.db")
