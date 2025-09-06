@@ -1,4 +1,4 @@
-# 🎄 Christmas Sales EDA Dashboard with SQL Integration
+# 🎄 Sales EDA Dashboard with SQL Integration
 
 An interactive **Exploratory Data Analysis (EDA)** dashboard built using **Streamlit** and **SQLite**, allowing users to analyze Christmas season sales data through visualizations, KPIs, filters, and custom SQL queries — all from the browser.
 
